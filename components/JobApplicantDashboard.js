@@ -2,7 +2,8 @@
 
 'use client';
 
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardHeader,
@@ -44,74 +45,40 @@ const JobApplicantDashboard = () => {
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [resumeFile, setResumeFile] = useState(null); 
     // Sample job postings data
-    const jobPostings = [
-        {
-            id: 1,
-            title: "Senior Frontend Developer",
-            department: "Engineering",
-            location: "Remote",
-            salary: "$120,000 - $150,000",
-            type: "Full-time",
-            postedDate: "2024-03-15",
-            description: "We're seeking an experienced Frontend Developer to join our engineering team. The ideal candidate will have strong expertise in React, TypeScript, and modern web technologies.",
-            requirements: [
-                "5+ years of experience with React",
-                "Strong understanding of TypeScript",
-                "Experience with state management (Redux, Context API)",
-                "Knowledge of responsive design and CSS frameworks"
-            ],
-            responsibilities: [
-                "Develop new user-facing features",
-                "Build reusable components and libraries",
-                "Optimize applications for maximum performance",
-                "Collaborate with back-end developers and designers"
-            ]
-        },
-        {
-            id: 2,
-            title: "Product Manager",
-            department: "Product",
-            location: "New York",
-            salary: "$130,000 - $160,000",
-            type: "Full-time",
-            postedDate: "2024-03-10",
-            description: "Looking for a Product Manager to drive product strategy and execution. You'll work closely with engineering, design, and business teams to deliver exceptional products.",
-            requirements: [
-                "5+ years of product management experience",
-                "Strong analytical and problem-solving skills",
-                "Excellent communication and leadership abilities",
-                "Experience with agile methodologies"
-            ],
-            responsibilities: [
-                "Define product strategy and roadmap",
-                "Gather and analyze user feedback",
-                "Coordinate with cross-functional teams",
-                "Drive product launches and iterations"
-            ]
-        },
-        {
-            id: 3,
-            title: "UX Designer",
-            department: "Design",
-            location: "San Francisco",
-            salary: "$100,000 - $130,000",
-            type: "Full-time",
-            postedDate: "2024-03-18",
-            description: "Join our design team to create beautiful and intuitive user experiences. You'll be responsible for the entire design process from research to implementation.",
-            requirements: [
-                "3+ years of UX design experience",
-                "Proficiency in Figma and design tools",
-                "Portfolio showcasing end-to-end design process",
-                "Experience with user research and testing"
-            ],
-            responsibilities: [
-                "Create user flows and wireframes",
-                "Conduct user research and testing",
-                "Design intuitive user interfaces",
-                "Collaborate with developers and stakeholders"
-            ]
+  const [jobPostings, setJobPostings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchJobPostings = async () => {
+      try {
+        const response = await fetch('/api/job-postings');
+        const data = await response.json();
+
+        if (data.success) {
+          setJobPostings(data.data);
+        } else {
+          console.error('Error fetching job postings:', data.error);
         }
-    ];
+      } catch (error) {
+        console.error('Error fetching job postings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobPostings();
+  }, []);
+
+
+
+  if (loading) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <p>Loading job postings...</p>
+      </div>
+    );
+  }
+
     const handleFileUpload = (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -130,80 +97,152 @@ const JobApplicantDashboard = () => {
     return matchesSearch && matchesLocation && matchesDepartment;
   });
 
-  const ApplicationModal = ({ job, onClose }) => (
-    <Dialog open={showApplicationModal} onOpenChange={setShowApplicationModal}>
-      <DialogContent className="max-w-2xl bg-white dark:bg-zinc-950">
-        <DialogHeader>
-          <DialogTitle className="text-gray-900 dark:text-gray-100">
-            Apply for {job.title}
-          </DialogTitle>
-          <DialogDescription className="text-gray-600 dark:text-gray-300">
-            Please fill out the following information to submit your application.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Full Name
-            </label>
-            <Input
-              placeholder="Enter your full name"
-                          className="bg-white dark:bg-zinc-950 text-gray-900 dark:text-gray-100"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Email
-            </label>
-            <Input
-              type="email"
-              placeholder="Enter your email"
-                          className="bg-white dark:bg-zinc-950 text-gray-900 dark:text-gray-100"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Phone
-            </label>
-            <Input
-              type="tel"
-              placeholder="Enter your phone number"
-                          className="bg-white dark:bg-zinc-950 text-gray-900 dark:text-gray-100"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Resume
-            </label>
-            <div className="border-2 border-dashed rounded-lg p-6 text-center border-gray-300 dark:border-gray-600">
-              <Upload className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
-              <div className="mt-2">
-                <Button variant="outline">Upload Resume</Button>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  PDF, DOC, or DOCX up to 5MB
-                </p>
-              </div>
+  const ApplicationModal = ({ job, onClose }) => {
+    const [formData, setFormData] = useState({
+      fullName: '',
+      email: '',
+      phone: '',
+      coverLetter: '',
+    });
+    const [resumeFile, setResumeFile] = useState(null);
+
+    const handleChange = (e) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleResumeChange = (e) => {
+      setResumeFile(e.target.files[0]);
+    };
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      if (!resumeFile) {
+        alert('Please upload your resume.');
+        return;
+      }
+
+      const form = new FormData();
+      form.append('jobId', job._id);
+      form.append('fullName', formData.fullName);
+      form.append('email', formData.email);
+      form.append('phone', formData.phone);
+      form.append('coverLetter', formData.coverLetter);
+      form.append('resume', resumeFile);
+
+      try {
+        const response = await fetch('/api/applications', {
+          method: 'POST',
+          body: form,
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert('Application submitted successfully!');
+          onClose();
+        } else {
+          alert('Error submitting application: ' + data.error);
+        }
+      } catch (error) {
+        console.error('Error submitting application:', error);
+        alert('An error occurred while submitting your application.');
+      }
+    };
+
+    return (
+      <Dialog open={showApplicationModal} onOpenChange={setShowApplicationModal}>
+        <DialogContent className="max-w-2xl bg-white dark:bg-black">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900 dark:text-gray-100">
+              Apply for {job.title}
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-300">
+              Please fill out the following information to submit your application.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Full Name */}
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                Full Name
+              </label>
+              <Input
+                name="fullName"
+                placeholder="Enter your full name"
+                value={formData.fullName}
+                onChange={handleChange}
+                className="bg-white dark:bg-white text-gray-900 dark:text-black"
+                required
+              />
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Cover Letter (Optional)
-            </label>
-            <textarea
-              className="w-full h-32 p-2 border rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
-              placeholder="Tell us why you're interested in this position..."
-            />
-          </div>
-          <div className="flex justify-end gap-3 mt-6">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button>Submit Application</Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                Email
+              </label>
+              <Input
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleChange}
+                className="bg-white dark:bg-white text-gray-900 dark:text-black"
+                required
+              />
+            </div>
+            {/* Phone */}
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                Phone
+              </label>
+              <Input
+                type="tel"
+                name="phone"
+                placeholder="Enter your phone number"
+                value={formData.phone}
+                onChange={handleChange}
+                className="bg-white dark:bg-white text-gray-900 dark:text-black"
+              />
+            </div>
+            {/* Resume */}
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-white">
+                Resume
+              </label>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleResumeChange}
+                required
+                className="w-full"
+              />
+            </div>
+            {/* Cover Letter */}
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                Cover Letter (Optional)
+              </label>
+              <textarea
+                name="coverLetter"
+                className="w-full h-32 p-2 border rounded-md bg-white dark:bg-white text-gray-900 dark:text-black border-gray-300 dark:border-gray-600"
+                placeholder="Tell us why you're interested in this position..."
+                value={formData.coverLetter}
+                onChange={handleChange}
+              />
+            </div>
+            {/* Submit Button */}
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="outline" onClick={onClose} type="button">
+                Cancel
+              </Button>
+              <Button type="submit">Submit Application</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-gray-100 rounded-lg min-h-screen">
@@ -251,8 +290,8 @@ const JobApplicantDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredJobs.map((job) => (
               <Card
-                key={job.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow bg-white dark:bg-stone-900"
+                key={job._id}
+                className="cursor-pointer hover:shadow-lg transition-shadow bg-white dark:bg-stone-800 rounded-lg"
                 onClick={() => setSelectedJob(job)}
               >
                 <CardHeader>

@@ -213,7 +213,7 @@ const LoginPage = () => {
 
             {/* Sign Up Modal */}
             <Dialog open={isSignUpOpen} onOpenChange={setIsSignUpOpen}>
-                <DialogContent className="sm:max-w-md bg-white dark:bg-gray-800">
+                <DialogContent className="sm:max-w-md bg-white dark:bg-black">
                     <DialogHeader>
                         <DialogTitle className="text-gray-900 dark:text-gray-100">Create an Account</DialogTitle>
                         <DialogDescription className="text-gray-600 dark:text-gray-300">
