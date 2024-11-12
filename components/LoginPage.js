@@ -77,16 +77,19 @@ const LoginPage = () => {
       }
   
       // Store token or user info in local storage or context if using JWT for session
-      localStorage.setItem('auth_token', data.token); // Store token (if you're using JWT)
+      document.cookie = `auth-token=${data.token}; path=/; HttpOnly; SameSite=Strict; ${process.env.NODE_ENV === 'production' ? 'Secure' : ''
+        }`;
+
   
       // Redirect based on user role
       if (data.role === 'applicant') {
-        console.log("Redirecting to applicant dashboard"); // Debug
-        router.push('/applicant-dashboard');
+        console.log("Redirecting to applicant dashboard");
+        await router.push('/applicant-dashboard');
       } else if (data.role === 'hr') {
-        console.log("Redirecting to HR dashboard"); // Debug
-        router.push('/hr-dashboard');
+        console.log("Redirecting to HR dashboard");
+        await router.push('/hr-dashboard');
       }
+
     } catch (err) {
       setError(err.message || 'Failed to login. Please try again.');
     } finally {
