@@ -1,21 +1,34 @@
-// models/User.js
-
 import mongoose from 'mongoose';
+import dbConnect from '@/lib/dbConnect';
 
-const { Schema } = mongoose;
-
-const UserSchema = new Schema(
-    {
-        name: { type: String },
-        email: {
-            type: String,
-            unique: true,
-            sparse: true, // Allow null emails if you don't have authentication yet
-        },
-        role: { type: String, enum: ['applicant', 'hr'], default: 'applicant' },
-        // Additional fields as needed
+const UserSchema = new mongoose.Schema({
+    username: {
+        type: String,
+        required: [true, 'Please provide a username'],
+        unique: true,
     },
-    { timestamps: true }
-);
+    email: {
+        type: String,
+        required: [true, 'Please provide an email'],
+        unique: true,
+    },
+    password: {
+        type: String,
+        required: [true, 'Please provide a password'],
+    },
+    role: {
+        type: String,
+        enum: ['applicant', 'hr'],
+        required: true,
+    }
+}, { timestamps: true });
 
-export default mongoose.models.User || mongoose.model('User', UserSchema);
+async function getUserModel() {
+    // Ensure database connection is established before defining the model
+    await dbConnect();
+
+    // Check if the model is already defined to prevent redefining it
+    return mongoose.models.User || mongoose.model('User', UserSchema);
+}
+
+export default getUserModel;
