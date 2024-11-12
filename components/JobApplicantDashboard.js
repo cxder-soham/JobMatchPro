@@ -212,7 +212,7 @@ const JobApplicantDashboard = () => {
               </label>
               <input
                 type="file"
-                accept=".pdf,.doc,.docx"
+                accept=".pdf,.doc,.docx, .json"
                 onChange={handleResumeChange}
                 required
                 className="w-full"
