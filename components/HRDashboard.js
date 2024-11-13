@@ -39,7 +39,8 @@ const TextareaField = ({ name, value, onChange, label }) => (
 );
 
 const HRDashboard = () => {
-    const [setSelectedJob] = useState(null);
+    const [selectedJob, setSelectedJob] = useState(null);
+    const [applications, setApplications] = useState([]);
     const [jobPostings, setJobPostings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -73,6 +74,29 @@ const HRDashboard = () => {
 
         fetchJobPostings();
     }, []);
+
+
+    // Function to fetch applications for the selected job
+    const fetchApplications = async (jobId) => {
+        try {
+            const response = await fetch(`/api/applications?jobId=${jobId}`);
+            const data = await response.json();
+            if (data.success) {
+                setApplications(data.data); // Store applications
+            } else {
+                console.error('Error fetching applications:', data.error);
+            }
+        } catch (error) {
+            console.error('Error fetching applications:', error);
+        }
+    };
+
+    // When a job is selected, load applications for that job
+    const handleJobSelect = async (job) => {
+        setSelectedJob(job);
+        await fetchApplications(job._id); // Fetch applications when selecting a job
+    };
+
 
     useEffect(() => {
         const fetchJobPostings = async () => {
@@ -110,6 +134,99 @@ const HRDashboard = () => {
         if (rate >= 80) return 'text-blue-600';
         return 'text-yellow-600';
     };
+
+
+
+    // Render details for the selected job if it's set
+    if (selectedJob) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 p-8">
+                <button
+                    onClick={() => setSelectedJob(null)} // This sets selectedJob back to null to return to the dashboard
+                    className="flex items-center gap-2 text-blue-500 hover:text-blue-600 mb-6"
+                >
+                    <ChevronLeft size={20} />
+                    Back to Dashboard
+                </button>
+
+                <Card className="mb-6">
+                    <CardHeader>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <CardTitle className="text-2xl">{selectedJob.title}</CardTitle>
+                                <CardDescription className="mt-2">
+                                    {selectedJob.department} · {selectedJob.location}
+                                </CardDescription>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-lg font-semibold">{selectedJob.applicants} Applicants</div>
+                                <div className="text-sm text-gray-500">
+                                    Posted on {new Date(selectedJob.postedDate).toLocaleDateString()}
+                                </div>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-gray-600 dark:text-white mb-4">{selectedJob.description}</p>
+                        <div className="flex items-center gap-4 mb-6">
+                            <Badge variant="outline">{selectedJob.department}</Badge>
+                            <Badge variant="outline">{selectedJob.location}</Badge>
+                            <Badge
+                                variant="outline"
+                                className={getPriorityColor(selectedJob.priority)}
+                            >
+                                {selectedJob.priority} Priority
+                            </Badge>
+                        </div>
+
+                        {/* Render Applicants */}
+                        <h3 className="text-lg font-bold mb-4">Applicants</h3>
+                        {applications.length > 0 ? (
+                            <ul className="space-y-4">
+                                {applications.map((applicant) => (
+                                    <li key={applicant._id} className="border p-4 rounded-md">
+                                        <p>
+                                            <strong>Name:</strong> {applicant.applicantName}
+                                        </p>
+                                        <p>
+                                            <strong>Email:</strong> {applicant.applicantEmail}
+                                        </p>
+                                        <p>
+                                            <strong>Phone:</strong> {applicant.applicantPhone || 'N/A'}
+                                        </p>
+                                        <p>
+                                            <strong>Cover Letter:</strong>{' '}
+                                            {applicant.coverLetter || 'No cover letter provided'}
+                                        </p>
+                                        {/* Optionally, you can display resume details */}
+                                        <p>
+                                            <strong>Resume:</strong>{' '}
+                                            <a
+                                                href={`data:${applicant.resume.contentType};base64,${Buffer.from(
+                                                    applicant.resume.data
+                                                ).toString('base64')}`}
+                                                download={applicant.resume.filename}
+                                                className="text-blue-500 underline"
+                                            >
+                                                Download Resume
+                                            </a>
+                                        </p>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p>No applicants for this job yet.</p>
+                        )}
+                    </CardContent>
+
+                </Card>
+            </div>
+        );
+    }
+
+
+
+
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;

@@ -12,4 +12,5 @@ const JobPostingSchema = new mongoose.Schema({
     postedDate: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.models.JobPosting || mongoose.model('JobPosting', JobPostingSchema);
+export const JobPosting = mongoose.models.JobPosting || mongoose.model('JobPosting', JobPostingSchema);
+
