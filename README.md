@@ -135,9 +135,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📫 Contact
 
-Your Name - [your-email@example.com](mailto:your-email@example.com)
-
-Project Link: [https://github.com/yourusername/JobMatchPro](https://github.com/yourusername/JobMatchPro)
+Project Link: [https://github.com/cxder-soham/JobMatchPro](https://github.com/cxder-soham/JobMatchPro)
 
 Live Demo: [https://job-match-pro.vercel.app](https://job-match-pro.vercel.app)
 
